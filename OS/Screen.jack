@@ -1,0 +1,142 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on 
+ * the screen is indexed (0,0).
+ */
+class Screen {
+    
+    static boolean currentColor;
+    static Array powersOfTwo;
+
+    /** Initializes the Screen. */
+    function void init() {
+        var int i, temp;
+        let powersOfTwo = Array.new(16);
+        let i = 0;
+        let temp = 1;
+        while(i < 16){
+            let powersOfTwo[i] = temp;
+            let temp = temp + temp;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b) {
+        let currentColor = b;
+        return;
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+        var int address, val, bit;
+        let address = 16384 + (y * 32) + (x / 16);
+        let bit = x - ((x / 16) * 16); // x % 16 
+        let val = Memory.peek(address);
+
+        // we need to set the bit-th bit of ram[address] equal to the current color
+
+        // if (currentColor) -> apply or(true) and paint black
+        // else apply and(false) and clear
+        // 2 ** bit
+
+        if(currentColor) {
+            let val = (powersOfTwo[bit] | val);
+        } else {
+            let val = (~powersOfTwo[bit] & val);
+        }
+
+        do Memory.poke(address, val);
+        return;
+
+    }
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x, int y, int x1, int y1) {
+        var int dx, dy, a, b, temp;
+        var int comp;
+        
+
+        if (x1 < x){ // switch
+            let temp = x1;
+            let x1 = x;
+            let x = temp;
+    
+            let temp = y1;
+            let y1 = y;
+            let y = temp;
+        }
+
+        let dx = x1 - x;
+        let dy = y1 - y;
+
+        let a = 0;
+        let b = 0;
+        let comp = 0;
+
+        if (dx = 0){ // horizontal line;
+
+            return;
+        }
+
+        if (dy = 0){ // vertical line
+            return;
+        }
+
+        if (y1 < y){ // right-up
+            let dy = -dy;
+            while(~(a>dx) & ~(b>dy)) {
+                do Screen.drawPixel((x + a), (y - b));
+                
+                if (comp < 0) { // a/dx < b/dy
+                    let a = a + 1;
+                    let comp = comp + dy;
+                }
+                else {
+                    let b = b + 1;
+                    let comp = comp - dx;
+                }
+            }
+            return;
+
+        } 
+            
+        while(~(a>dx) & ~(b>dy)) { // right-down
+            do Screen.drawPixel((x + a), (y + b));
+                
+            if (comp < 0) { // a/dx < b/dy
+                let a = a + 1;
+                let comp = comp + dy;
+            }
+            else {
+                let b = b + 1;
+                let comp = comp - dx;
+            }
+        }
+
+        
+        
+        return;
+
+    }
+
+    /** Draws a filled rectangle whose top left corner is (x1, y1)
+     *  and bottom right corner is (x2,y2), using the current color. */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+    }
+
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    function void drawCircle(int x, int y, int r) {
+    }
+}
